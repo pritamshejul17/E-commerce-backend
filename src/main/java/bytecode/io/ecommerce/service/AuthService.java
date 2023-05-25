@@ -1,5 +1,7 @@
 package bytecode.io.ecommerce.service;
 
+import bytecode.io.ecommerce.dto.AuthenticationResponse;
+import bytecode.io.ecommerce.dto.LoginRequest;
 import bytecode.io.ecommerce.dto.UserDto;
 import bytecode.io.ecommerce.exception.SpringECommerceException;
 import bytecode.io.ecommerce.model.NotificationEmail;
@@ -7,7 +9,12 @@ import bytecode.io.ecommerce.model.User;
 import bytecode.io.ecommerce.model.VerifyToken;
 import bytecode.io.ecommerce.repository.UserRepository;
 import bytecode.io.ecommerce.repository.VerifyTokenRepository;
+import bytecode.io.ecommerce.security.JwtProvider;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +29,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VerifyTokenRepository verifyTokenRepository;
     private final MailService mailService;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
+    private final AuthenticationManager authenticationManager;
 
     public void signUp(UserDto userDto) {
 
@@ -63,5 +72,17 @@ public class AuthService {
     public void verifyAccount(String token) {
         Optional<VerifyToken> verificationToken = verifyTokenRepository.findByToken(token);
         fetchUserAndEnable(verificationToken.orElseThrow(() -> new SpringECommerceException("Invalid Token")));
+    }
+
+    public AuthenticationResponse login(LoginRequest loginRequest) {
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
+                loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
+        String token = jwtProvider.generateToken(authenticate);
+        return AuthenticationResponse.builder()
+                .authenticationToken(token)
+                .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .username(loginRequest.getUsername())
+                .build();
     }
 }

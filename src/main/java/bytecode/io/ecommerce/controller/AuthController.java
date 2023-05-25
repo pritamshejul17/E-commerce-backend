@@ -1,5 +1,7 @@
 package bytecode.io.ecommerce.controller;
 
+import bytecode.io.ecommerce.dto.AuthenticationResponse;
+import bytecode.io.ecommerce.dto.LoginRequest;
 import bytecode.io.ecommerce.dto.UserDto;
 import bytecode.io.ecommerce.model.User;
 import bytecode.io.ecommerce.service.AuthService;
@@ -25,6 +27,11 @@ public class AuthController {
     public ResponseEntity<String> verifyAccount(@PathVariable String token) {
         authService.verifyAccount(token);
         return new ResponseEntity<>("Account activated successfully", HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public AuthenticationResponse login(@RequestBody LoginRequest loginRequest) {
+        return authService.login(loginRequest);
     }
 
 }

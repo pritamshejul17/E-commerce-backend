@@ -2,6 +2,7 @@ package bytecode.io.ecommerce.service;
 
 import bytecode.io.ecommerce.dto.AuthenticationResponse;
 import bytecode.io.ecommerce.dto.LoginRequest;
+import bytecode.io.ecommerce.dto.RefreshTokenRequest;
 import bytecode.io.ecommerce.dto.UserDto;
 import bytecode.io.ecommerce.exception.SpringECommerceException;
 import bytecode.io.ecommerce.model.NotificationEmail;
@@ -32,6 +33,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     public void signUp(UserDto userDto) {
 
@@ -81,8 +83,20 @@ public class AuthService {
         String token = jwtProvider.generateToken(authenticate);
         return AuthenticationResponse.builder()
                 .authenticationToken(token)
+                .refreshToken(refreshTokenService.generateRefreshToken().getToken())
                 .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
                 .username(loginRequest.getUsername())
+                .build();
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+        String token = jwtProvider.generateTokenWithUserName(refreshTokenRequest.getUsername());
+        return AuthenticationResponse.builder()
+                .authenticationToken(token)
+                .refreshToken(refreshTokenRequest.getRefreshToken())
+                .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .username(refreshTokenRequest.getUsername())
                 .build();
     }
 }

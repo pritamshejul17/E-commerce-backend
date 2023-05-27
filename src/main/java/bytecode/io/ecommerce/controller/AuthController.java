@@ -2,9 +2,10 @@ package bytecode.io.ecommerce.controller;
 
 import bytecode.io.ecommerce.dto.AuthenticationResponse;
 import bytecode.io.ecommerce.dto.LoginRequest;
+import bytecode.io.ecommerce.dto.RefreshTokenRequest;
 import bytecode.io.ecommerce.dto.UserDto;
-import bytecode.io.ecommerce.model.User;
 import bytecode.io.ecommerce.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthenticationResponse login(@RequestBody LoginRequest loginRequest) {
         return authService.login(loginRequest);
+    }
+
+    @PostMapping("/refresh/token")
+    public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return authService.refreshToken(refreshTokenRequest);
     }
 
 }
